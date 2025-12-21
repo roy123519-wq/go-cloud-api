@@ -1,0 +1,14 @@
+.git
+.gitignore
+
+.vscode
+.idea
+
+*.md
+
+.env
+bin
+tmp
+dist
+
+**/*_test.go
