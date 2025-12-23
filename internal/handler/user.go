@@ -23,7 +23,7 @@ type createUserReq struct {
 }
 
 func (h *UserHandler) GetUsers(c *gin.Context) {
-	users, err := h.svc.GetAll()
+	users, err := h.svc.GetAll(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Fail("INTERNAL_ERROR", "internal error"))
 		return
@@ -37,7 +37,7 @@ func (h *UserHandler) GetUsersByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.Fail("INVALID_ID", "invalid user id"))
 		return
 	}
-	u, err := h.svc.GetByID(id)
+	u, err := h.svc.GetByID(c.Request.Context(), id)
 	if err == service.ErrUserNotFound {
 		c.JSON(http.StatusNotFound, response.Fail("USER_NOT_FOUND", "user not found"))
 		return
@@ -59,7 +59,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.Fail("VALIDATION_ERROR", "name and email are required"))
 		return
 	}
-	u, err := h.svc.Create(req.Name, req.Email)
+	u, err := h.svc.Create(c.Request.Context(), req.Name, req.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Fail("INTERNAL_ERROR", "internal error"))
 		return

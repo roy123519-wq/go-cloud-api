@@ -1,59 +1,72 @@
 package service
 
 import (
-	"go-cloud-api/internal/model"
+	"context"
 	"testing"
+
+	"go-cloud-api/internal/model"
+	"go-cloud-api/internal/repository"
 )
 
 func TestUserService_GetAll(t *testing.T) {
-	svc := NewUserServiceWithSeed([]model.User{
-		{ID: 1, Name: "Alice", Email: "alice@example.com"},
-		{ID: 2, Name: "Bob", Email: "bob@example.com"},
+	repo := repository.NewInMemoryUserRepository([]model.User{
+		{ID: 1, Name: "Alice", Email: "alice@test.com"},
+		{ID: 2, Name: "Bob", Email: "bob@test.com"},
 	})
-	users, err := svc.GetAll()
+	svc := NewUserService(repo)
+
+	users, err := svc.GetAll(context.Background())
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-
 	if len(users) != 2 {
 		t.Fatalf("expected 2 users, got %d", len(users))
 	}
 }
+
 func TestUserService_GetByID_Found(t *testing.T) {
-	svc := NewUserServiceWithSeed([]model.User{
-		{ID: 1, Name: "Alice", Email: "alice@example.com"},
+	repo := repository.NewInMemoryUserRepository([]model.User{
+		{ID: 1, Name: "Alice", Email: "alice@test.com"},
 	})
-	u, err := svc.GetByID(1)
+	svc := NewUserService(repo)
+
+	u, err := svc.GetByID(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	if u.ID != 1 {
-		t.Fatalf("expected user ID 1, got %d", u.ID)
+		t.Fatalf("expected ID=1, got %d", u.ID)
 	}
 }
-func TestUserService_GetByID_NotFound(t *testing.T) {
-	svc := NewUserServiceWithSeed([]model.User{
-		{ID: 1, Name: "Alice", Email: "alice@test.com"},
-	})
-	_, err := svc.GetByID(999)
-	if err != ErrUserNotFound {
-		t.Fatalf("expected error, got %v", err)
-	}
-}
-func TestUserService_Create(t *testing.T) {
-	svc := NewUserServiceWithSeed([]model.User{
-		{ID: 1, Name: "Alice", Email: "alice@test.com"},
-	})
-	u, err := svc.Create("Charlie", "charlie@example.com")
 
+func TestUserService_GetByID_NotFound(t *testing.T) {
+	repo := repository.NewInMemoryUserRepository([]model.User{
+		{ID: 1, Name: "Alice", Email: "alice@test.com"},
+	})
+	svc := NewUserService(repo)
+
+	_, err := svc.GetByID(context.Background(), 999)
+	if err != ErrUserNotFound {
+		t.Fatalf("expected ErrUserNotFound, got %v", err)
+	}
+}
+
+func TestUserService_Create(t *testing.T) {
+	repo := repository.NewInMemoryUserRepository([]model.User{
+		{ID: 1, Name: "Alice", Email: "alice@test.com"},
+	})
+	svc := NewUserService(repo)
+
+	u, err := svc.Create(context.Background(), "Charlie", "charlie@test.com")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	if u.ID != 2 {
-		t.Fatalf("expected user ID 2, got %d", u.ID)
+		t.Fatalf("expected new ID=2, got %d", u.ID)
 	}
-	all, _ := svc.GetAll()
+
+	all, _ := svc.GetAll(context.Background())
 	if len(all) != 2 {
-		t.Fatalf("expected 2 users, got %d", len(all))
+		t.Fatalf("expected 2 users after create, got %d", len(all))
 	}
 }

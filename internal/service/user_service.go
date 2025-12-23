@@ -1,9 +1,11 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"go-cloud-api/internal/model"
+	repository "go-cloud-api/internal/repository"
 )
 
 var (
@@ -11,48 +13,35 @@ var (
 )
 
 type UserService interface {
-	GetAll() ([]model.User, error)
-	GetByID(id int) (model.User, error)
-	Create(name, email string) (model.User, error)
+	GetAll(ctx context.Context) ([]model.User, error)
+	GetByID(ctx context.Context, id int) (model.User, error)
+	Create(ctx context.Context, name, email string) (model.User, error)
 }
-
 type userService struct {
-	users []model.User
+	repo repository.UserRepository
 }
 
-func NewUserService() UserService {
-	return &userService{
-		users: []model.User{
-			{ID: 1, Name: "Alice", Email: "alice@example.com"},
-			{ID: 2, Name: "Bob", Email: "bob@example.com"},
-		},
-	}
+func NewUserService(repo repository.UserRepository) UserService {
+	return &userService{repo: repo}
 }
-func (s *userService) GetAll() ([]model.User, error) {
-	return s.users, nil
+
+func (s *userService) GetAll(ctx context.Context) ([]model.User, error) {
+	return s.repo.GetAll(ctx)
 }
-func (s *userService) GetByID(id int) (model.User, error) {
-	for _, u := range s.users {
-		if u.ID == id {
-			return u, nil
+func (s *userService) GetByID(ctx context.Context, id int) (model.User, error) {
+	u, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			return model.User{}, ErrUserNotFound
 		}
+		return model.User{}, err
 	}
-	return model.User{}, ErrUserNotFound
+	return u, nil
 }
-func (s *userService) Create(name, email string) (model.User, error) {
+func (s *userService) Create(ctx context.Context, name, email string) (model.User, error) {
 	u := model.User{
-		ID:    len(s.users) + 1,
 		Name:  name,
 		Email: email,
 	}
-	s.users = append(s.users, u)
-	return u, nil
-}
-func NewUserServiceWithSeed(seed []model.User) UserService {
-	usersCopy := make([]model.User, len(seed))
-	copy(usersCopy, seed)
-
-	return &userService{
-		users: usersCopy,
-	}
+	return s.repo.Create(ctx, u)
 }
