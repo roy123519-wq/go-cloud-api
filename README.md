@@ -17,7 +17,7 @@ A simple Go Web API project built with Gin, following clean architecture princip
 ---
 
 ##  Project Structure
-
+```
 cmd/server
 └─ main.go # Application entry point
 
@@ -28,7 +28,7 @@ internal
 ├─ middleware # Gin middlewares (logging, error handling)
 ├─ model # Domain models
 └─ response # Unified API response & AppError
-
+```
 
 ---
 
@@ -66,9 +66,9 @@ Repository (ErrUserNotFound)
   "data": {...},
   "error": null
 }
-
+```
 ### Error
-
+```json
 {
   "data": null,
   "error": {
@@ -76,10 +76,11 @@ Repository (ErrUserNotFound)
     "message": "user not found"
   }
 }
-
-Testing
+```
+---
+## Testing
 
 Run all tests:
-
+```
 go test ./...
-
+```
