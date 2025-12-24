@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"go-cloud-api/internal/middleware"
 	"go-cloud-api/internal/repository"
 	"go-cloud-api/internal/service"
 
@@ -15,6 +16,8 @@ func setupTestRouter() *gin.Engine {
 	h := NewUserHandler(svc)
 
 	r := gin.New()
+	r.Use(middleware.ErrorHandler()) // ✅ 這行一定要有（Day12 後）
+
 	r.GET("/users", h.GetUsers)
 	r.GET("/users/:id", h.GetUsersByID)
 	r.POST("/users", h.CreateUser)

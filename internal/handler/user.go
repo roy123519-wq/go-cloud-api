@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"go-cloud-api/internal/response"
-	"go-cloud-api/internal/service"
 	"net/http"
 	"strconv"
+
+	"go-cloud-api/internal/response"
+	"go-cloud-api/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ type createUserReq struct {
 func (h *UserHandler) GetUsers(c *gin.Context) {
 	users, err := h.svc.GetAll(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.Fail("INTERNAL_ERROR", "internal error"))
+		_ = c.Error(response.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal error"))
 		return
 	}
 	c.JSON(http.StatusOK, response.Success(users))
@@ -34,35 +35,39 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 func (h *UserHandler) GetUsersByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Fail("INVALID_ID", "invalid user id"))
+		_ = c.Error(response.NewAppError(http.StatusBadRequest, "INVALID_ID", "invalid user id"))
 		return
 	}
+
 	u, err := h.svc.GetByID(c.Request.Context(), id)
-	if err == service.ErrUserNotFound {
-		c.JSON(http.StatusNotFound, response.Fail("USER_NOT_FOUND", "user not found"))
-		return
-	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.Fail("INTERNAL_ERROR", "internal error"))
+		if err == service.ErrUserNotFound {
+			_ = c.Error(response.NewAppError(http.StatusNotFound, "USER_NOT_FOUND", "user not found"))
+			return
+		}
+		_ = c.Error(response.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal error"))
 		return
 	}
+
 	c.JSON(http.StatusOK, response.Success(u))
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req createUserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response.Fail("INVALID_REQUEST", "invalid request body"))
+		_ = c.Error(response.NewAppError(http.StatusBadRequest, "INVALID_REQUEST", "invalid request body"))
 		return
 	}
 	if req.Name == "" || req.Email == "" {
-		c.JSON(http.StatusBadRequest, response.Fail("VALIDATION_ERROR", "name and email are required"))
+		_ = c.Error(response.NewAppError(http.StatusBadRequest, "VALIDATION_ERROR", "name and email are required"))
 		return
 	}
+
 	u, err := h.svc.Create(c.Request.Context(), req.Name, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.Fail("INTERNAL_ERROR", "internal error"))
+		_ = c.Error(response.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal error"))
 		return
 	}
+
 	c.JSON(http.StatusCreated, response.Success(u))
 }

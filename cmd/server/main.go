@@ -19,7 +19,7 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestLogger())
-
+	r.Use(middleware.ErrorHandler())
 	// ---- init db connection ----
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
